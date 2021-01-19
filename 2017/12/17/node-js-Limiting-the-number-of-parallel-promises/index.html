@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next muse use-motion" lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '複製',
+      copy_success: '複製成功',
+      copy_failure: '複製失敗'
+    }
+  };
+</script>
+
+  <meta name="description" content="Promise.all is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, y">
+<meta name="keywords" content="node.js">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[node.js] Limiting the number of parallel promises">
+<meta property="og:url" content="https://lyenliang.github.io/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/index.html">
+<meta property="og:site_name" content="Brian&#39;s Blog">
+<meta property="og:description" content="Promise.all is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, y">
+<meta property="og:locale" content="zh-TW">
+<meta property="og:updated_time" content="2020-03-10T06:37:10.601Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[node.js] Limiting the number of parallel promises">
+<meta name="twitter:description" content="Promise.all is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, y">
+  <link rel="canonical" href="https://lyenliang.github.io/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>[node.js] Limiting the number of parallel promises | Brian's Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-TW">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Brian's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切換導航欄">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首頁</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>歸檔</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({
+          google_ad_client: "ca-pub-4157401893872189",
+          enable_page_level_ads: true
+     });
+</script>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-44915629-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-44915629-2');
+</script>
+
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="lyenliang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Brian's Blog">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">[node.js] Limiting the number of parallel promises
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">發表於</span>
+
+              
+                
+              
+
+              <time title="創建時間：2017-12-17 19:56:00" itemprop="dateCreated datePublished" datetime="2017-12-17T19:56:00+08:00">2017-12-17</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新於</span>
+                <time title="修改時間：2020-03-10 14:37:10" itemprop="dateModified" datetime="2020-03-10T14:37:10+08:00">2020-03-10</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="http://bluebirdjs.com/docs/api/promise.all.html" target="_blank" rel="noopener">Promise.all</a> is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, you may wish to limit the number of simultaneous downloads from a website.</p>
+<p><a href="https://github.com/charto/cwait" target="_blank" rel="noopener">cwait</a> is a convenient tool which allows you to limit the number of promises running in parallel. </p>
+<p>Here I’ll demonstrate how to use <code>cwait</code>. First let’s assume we have a function <code>later</code> that returns a promise which is resolved after a specified timeout. </p>
+<pre><code>function later (time, val) {
+  console.log(`later is triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+</code></pre><p>When we create 10 promises with <code>later</code>, and execute them with <code>Promise.all</code>, it will take about 1 second to finish the execution.</p>
+<pre><code>// echoNumberPromiseAll.js
+
+const Promise = require(&apos;bluebird&apos;)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+let promises = []
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    promises.push(later(timeout, i))
+  }
+}
+
+init()
+
+Promise.all(promises)
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start} ms`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p><code>node echoNumberPromiseAll.js</code>‘s execution result:</p>
+<pre><code>node echoNumberPromiseAll.js
+later triggered. 0
+later triggered. 1
+later triggered. 2
+later triggered. 3
+later triggered. 4
+later triggered. 5
+later triggered. 6
+later triggered. 7
+later triggered. 8
+later triggered. 9
+All done. result: 0,1,2,3,4,5,6,7,8,9
+Execution time: 1012 ms
+</code></pre><p>As you can see from the above output, 10 promises are triggered simultaneously. Because the execution time is about 1 second.</p>
+<p>Before we can apply <code>cwait</code>, we have to convert <code>Promise.all</code> to <a href="http://bluebirdjs.com/docs/api/promise.map.html" target="_blank" rel="noopener"><code>Promise.map</code></a> first. </p>
+<p>Here’s the converted code:</p>
+<pre><code>// echoNumberPromiseMap.js
+
+const Promise = require(&apos;bluebird&apos;)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+let numbers = []
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    numbers.push(i)
+  }
+}
+
+function promiseMap (number) {
+  return later(timeout, number)
+}
+
+init()
+
+Promise.map(numbers, promiseMap)
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start} ms`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p>Then we will be able to apply <code>cwait</code> to the above code:</p>
+<pre><code>// echoNumberCwait.js
+
+const TaskQueue = require(&apos;cwait&apos;).TaskQueue
+const Promise = require(&apos;bluebird&apos;)
+
+let queue = new TaskQueue(Promise, 3)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+let numbers = []
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    numbers.push(i)
+  }
+}
+
+function promiseMap (number) {
+  return later(timeout, number)
+}
+
+init()
+
+Promise.map(numbers, queue.wrap(promiseMap))
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start}`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p>In the example above, we limit the number of parallel promises to 3. Here’s the execution result of <code>node echoNumberCwait.js</code></p>
+<pre><code>later triggered. 0
+later triggered. 1
+later triggered. 2
+later triggered. 3
+later triggered. 9
+later triggered. 8
+later triggered. 7
+later triggered. 6
+later triggered. 5
+later triggered. 4
+All done. result: 0,1,2,3,4,5,6,7,8,9
+Execution time: 4016 ms
+</code></pre><p>The program first executes the promises with <code>val</code> equal to 0, 1, and 2. And waits until the 3 promises are completed. Then it executes the promises with <code>val</code> equal to 3, 9, and 8. and wait for them to complete …</p>
+<p>So in the end, it takes about 4 seconds to finish the execution. </p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/node-js/" rel="tag"># node.js</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/12/09/進化：從孤膽極客到高效團隊/" rel="next" title="進化：從孤膽極客到高效團隊">
+                  <i class="fa fa-chevron-left"></i> 進化：從孤膽極客到高效團隊
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/06/16/AWS CLI 切換不同配置/" rel="prev" title="AWS CLI 切換不同配置">
+                  AWS CLI 切換不同配置 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">lyenliang</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">標籤</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+        </div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lyenliang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 強力驅動 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主題 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/schemes/muse.js?v=7.3.0"></script>
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
