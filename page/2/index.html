@@ -145,6 +145,228 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lyenliang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Brian's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/" class="post-title-link" itemprop="url">[node.js] Limiting the number of parallel promises</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">發表於</span>
+
+              <time title="創建時間：2017-12-17 19:56:00" itemprop="dateCreated datePublished" datetime="2017-12-17T19:56:00+08:00">2017-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新於</span>
+                <time title="修改時間：2022-06-17 10:30:04" itemprop="dateModified" datetime="2022-06-17T10:30:04+08:00">2022-06-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><a href="http://bluebirdjs.com/docs/api/promise.all.html" target="_blank" rel="noopener">Promise.all</a> is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, you may wish to limit the number of simultaneous downloads from a website.</p>
+<p><a href="https://github.com/charto/cwait" target="_blank" rel="noopener">cwait</a> is a convenient tool which allows you to limit the number of promises running in parallel. </p>
+<p>Here I’ll demonstrate how to use <code>cwait</code>. First let’s assume we have a function <code>later</code> that returns a promise which is resolved after a specified timeout. </p>
+<pre><code>function later (time, val) {
+  console.log(`later is triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+</code></pre><p>When we create 10 promises with <code>later</code>, and execute them with <code>Promise.all</code>, it will take about 1 second to finish the execution.</p>
+<pre><code>// echoNumberPromiseAll.js
+
+const Promise = require(&apos;bluebird&apos;)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+let promises = []
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    promises.push(later(timeout, i))
+  }
+}
+
+init()
+
+Promise.all(promises)
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start} ms`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p><code>node echoNumberPromiseAll.js</code>‘s execution result:</p>
+<pre><code>node echoNumberPromiseAll.js
+later triggered. 0
+later triggered. 1
+later triggered. 2
+later triggered. 3
+later triggered. 4
+later triggered. 5
+later triggered. 6
+later triggered. 7
+later triggered. 8
+later triggered. 9
+All done. result: 0,1,2,3,4,5,6,7,8,9
+Execution time: 1012 ms
+</code></pre><p>As you can see from the above output, 10 promises are triggered simultaneously. Because the execution time is about 1 second.</p>
+<p>Before we can apply <code>cwait</code>, we have to convert <code>Promise.all</code> to <a href="http://bluebirdjs.com/docs/api/promise.map.html" target="_blank" rel="noopener"><code>Promise.map</code></a> first. </p>
+<p>Here’s the converted code:</p>
+<pre><code>// echoNumberPromiseMap.js
+
+const Promise = require(&apos;bluebird&apos;)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+let numbers = []
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    numbers.push(i)
+  }
+}
+
+function promiseMap (number) {
+  return later(timeout, number)
+}
+
+init()
+
+Promise.map(numbers, promiseMap)
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start} ms`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p>Then we will be able to apply <code>cwait</code> to the above code:</p>
+<pre><code>// echoNumberCwait.js
+
+const TaskQueue = require(&apos;cwait&apos;).TaskQueue
+const Promise = require(&apos;bluebird&apos;)
+
+let queue = new TaskQueue(Promise, 3)
+
+let totalNumber = 10
+let timeout = 1000 // 1000 ms
+let start, finish
+
+let numbers = []
+
+function later (time, val) {
+  console.log(`later triggered. ${val}`)
+  return new Promise((resolve, reject) =&gt; {
+    setTimeout(resolve, time, val)
+  })
+}
+
+function init () {
+  start = new Date()
+  for (let i = 0; i &lt; totalNumber; i += 1) {
+    numbers.push(i)
+  }
+}
+
+function promiseMap (number) {
+  return later(timeout, number)
+}
+
+init()
+
+Promise.map(numbers, queue.wrap(promiseMap))
+  .then((result) =&gt; {
+    console.log(`All done. result: ${result}`)
+    finish = new Date()
+    console.log(`Execution time: ${finish - start}`)
+  })
+  .catch(err =&gt; {
+    console.error(`error: ${err}`)
+  })
+</code></pre><p>In the example above, we limit the number of parallel promises to 3. Here’s the execution result of <code>node echoNumberCwait.js</code></p>
+<pre><code>later triggered. 0
+later triggered. 1
+later triggered. 2
+later triggered. 3
+later triggered. 9
+later triggered. 8
+later triggered. 7
+later triggered. 6
+later triggered. 5
+later triggered. 4
+All done. result: 0,1,2,3,4,5,6,7,8,9
+Execution time: 4016 ms
+</code></pre><p>The program first executes the promises with <code>val</code> equal to 0, 1, and 2. And waits until the 3 promises are completed. Then it executes the promises with <code>val</code> equal to 3, 9, and 8. and wait for them to complete …</p>
+<p>So in the end, it takes about 4 seconds to finish the execution. </p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
     <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/12/09/進化：從孤膽極客到高效團隊/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -793,95 +1015,6 @@ function foo {
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
-    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/03/04/node-js-%BC%A6%F1%A6+=-node-js-%BCO-non-blocking-%D1B-event-driven/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="lyenliang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Brian's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/03/04/node-js-%BC%A6%F1%A6+=-node-js-%BCO-non-blocking-%D1B-event-driven/" class="post-title-link" itemprop="url">[node.js] event-driven, and non-blocking</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">發表於</span>
-
-              <time title="創建時間：2017-03-04 09:38:00" itemprop="dateCreated datePublished" datetime="2017-03-04T09:38:00+08:00">2017-03-04</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新於</span>
-                <time title="修改時間：2022-06-17 10:30:04" itemprop="dateModified" datetime="2022-06-17T10:30:04+08:00">2022-06-17</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><a href="https://nodejs.org/en/" target="_blank" rel="noopener">node.js</a> 官方網站說 <em>Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient</em></p>
-<p>到底是什麼架構讓 node.js 可以做到 event-driven 及 non-blocking 呢？今天就來談談這個話題。</p>
-<p>首先我們要知道 node.js 內部有個 <a href="https://zh.wikipedia.org/wiki/V8_(JavaScript%E5%BC%95%E6%93%8E" target="_blank" rel="noopener">v8 engine</a>，它負責把 javascript 程式碼轉成電腦能執行的資訊。</p>
-<p>另一個重要的架構是 <a href="http://libuv.org/" target="_blank" rel="noopener">libuv</a>，由於有這個 library，node.js 才能實現 event-driven 及 non-blocking 特性。</p>
-<p><img src="/images/nodejs/v8_libuv.png" alt="node.js 架構" style="width: 630px; "></p>
-<p>假設你想用 node.js 讀一個文字檔，你可能會這麼寫</p>
-<pre><code>var fs = require(&apos;fs&apos;);
-
-fs.readFile(&apos;myFile.txt&apos;, function(err, data) {
-  console.log(data);
-});
-console.log(&apos;After calling readFile&apos;);
-</code></pre><p>當 <code>readFile</code> 被調用時，libuv 會發出一個 request 給作業系統，請它回傳 <code>myFile.txt</code> 的內容。等到作業系統取得檔案內容後，libuv 會收到通知，當 event loop 處理這個 event 時，發現它有對應的 callback， <code>function(err, data) { console.log(data); }</code> 才會被調用。</p>
-<p>這邊 event loop 做的事可以用一段 pseudo code 表示：</p>
-<pre><code>while there are still events to process:
-    e = get the next event
-    if there is a callback associated with e:
-        call the callback
-</code></pre><p>由於 libuv 運作時，v8 engine 也可以同時處理 javascript 的 code，所以才說 node.js 是 non-blocking，這代表 javascript code 不需要等作業系統取得檔案內容就可以繼續下一動作。</p>
-<p>由於每當一個 event 結束時，v8 都可以收到通知，所以才說 node.js 是 event-driven。</p>
-<p>參考資料：</p>
-<ol>
-<li><a href="https://nikhilm.github.io/uvbook/basics.html" target="_blank" rel="noopener">An Introduction to libuv</a></li>
-<li><a href="https://www.udemy.com/understand-nodejs/learn/v4/overview" target="_blank" rel="noopener">Learn and Understand NodeJS</a></li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
     <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/03/04/node-js-_BC_A6_F1_A6+=-node-js-_BCO-non-blocking-_D1B-event-driven/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1036,7 +1169,7 @@ console.log(&apos;After calling readFile&apos;);
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-count">25</span>
           <span class="site-state-item-name">文章</span>
         </a>
       </div>

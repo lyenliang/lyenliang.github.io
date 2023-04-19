@@ -20,15 +20,20 @@
     var CONFIG = {"hostname":"lyenliang.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Brian&#39;s Blog">
-<meta property="og:url" content="https://lyenliang.github.io/archives/2017/12/index.html">
+  <meta name="description" content="無意間發現console.log( 3 &amp;gt; 2 &amp;gt; 1 );回傳值是 false，讓我感到有些奇怪，因為 3 比 2 大也比 1 大，而且 2 比 1 大也是正確的，照理講應該回傳true才合理。但仔細想想後才意識到3 &amp;gt; 2 &amp;gt; 1應該要拆開來看能知道當中發生什麼事情： 首先，由於&amp;gt;運算子的執行順序(operator associativity)是從左到右，所以我們">
+<meta name="keywords" content="javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[javascript] 運算子執行順序(operator associativiy)與強制轉型(coercion)">
+<meta property="og:url" content="https://lyenliang.github.io/2017/02/13/javascript-_AE__AEì_A6_A6+_A9_A6/index.html">
 <meta property="og:site_name" content="Brian&#39;s Blog">
+<meta property="og:description" content="無意間發現console.log( 3 &amp;gt; 2 &amp;gt; 1 );回傳值是 false，讓我感到有些奇怪，因為 3 比 2 大也比 1 大，而且 2 比 1 大也是正確的，照理講應該回傳true才合理。但仔細想想後才意識到3 &amp;gt; 2 &amp;gt; 1應該要拆開來看能知道當中發生什麼事情： 首先，由於&amp;gt;運算子的執行順序(operator associativity)是從左到右，所以我們">
 <meta property="og:locale" content="zh-TW">
+<meta property="og:updated_time" content="2023-03-13T02:57:33.492Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Brian&#39;s Blog">
+<meta name="twitter:title" content="[javascript] 運算子執行順序(operator associativiy)與強制轉型(coercion)">
+<meta name="twitter:description" content="無意間發現console.log( 3 &amp;gt; 2 &amp;gt; 1 );回傳值是 false，讓我感到有些奇怪，因為 3 比 2 大也比 1 大，而且 2 比 1 大也是正確的，照理講應該回傳true才合理。但仔細想想後才意識到3 &amp;gt; 2 &amp;gt; 1應該要拆開來看能知道當中發生什麼事情： 首先，由於&amp;gt;運算子的執行順序(operator associativity)是從左到右，所以我們">
 
-<link rel="canonical" href="https://lyenliang.github.io/archives/2017/12/">
+<link rel="canonical" href="https://lyenliang.github.io/2017/02/13/javascript-_AE__AEì_A6_A6+_A9_A6/">
 
 
 <script id="page-configurations">
@@ -36,12 +41,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-TW'
   };
 </script>
 
-  <title>歸檔 | Brian's Blog</title>
+  <title>[javascript] 運算子執行順序(operator associativiy)與強制轉型(coercion) | Brian's Blog</title>
   
 
 
@@ -139,110 +144,99 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共有 25 篇文章。 繼續努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/02/13/javascript-_AE__AEì_A6_A6+_A9_A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lyenliang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Brian's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          [javascript] 運算子執行順序(operator associativiy)與強制轉型(coercion)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">發表於</span>
+
+              <time title="創建時間：2017-02-13 21:52:00" itemprop="dateCreated datePublished" datetime="2017-02-13T21:52:00+08:00">2017-02-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新於</span>
+                <time title="修改時間：2023-03-13 10:57:33" itemprop="dateModified" datetime="2023-03-13T10:57:33+08:00">2023-03-13</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2017</span>
-    </div>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2017-12-17T19:56:00+08:00"
-              content="2017-12-17">
-          12-17
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/" itemprop="url">
-            <span itemprop="name">[node.js] Limiting the number of parallel promises</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2017-12-09T19:47:29+08:00"
-              content="2017-12-09">
-          12-09
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2017/12/09/進化：從孤膽極客到高效團隊/" itemprop="url">
-            <span itemprop="name">進化：從孤膽極客到高效團隊</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2017-12-03T15:18:00+08:00"
-              content="2017-12-03">
-          12-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2017/12/03/忘掉你的英文文法吧/" itemprop="url">
-            <span itemprop="name">[英文] 忘掉英文文法吧！</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2017-12-03T10:23:00+08:00"
-              content="2017-12-03">
-          12-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2017/12/03/Characteristics-of-Software-Quality/" itemprop="url">
-            <span itemprop="name">External and Internal Software Quality Characteristics</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
+        <p>無意間發現<code>console.log( 3 &gt; 2 &gt; 1 );</code>回傳值是 <code>false</code>，讓我感到有些奇怪，因為 3 比 2 大也比 1 大，而且 2 比 1 大也是正確的，照理講應該回傳<code>true</code>才合理。但仔細想想後才意識到<code>3 &gt; 2 &gt; 1</code>應該要拆開來看能知道當中發生什麼事情：</p>
+<p>首先，由於<code>&gt;</code>運算子的<a href="https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Reference/Operators/Operator_Precedence" target="_blank" rel="noopener">執行順序(operator associativity)</a>是從左到右，所以我們必須先觀察<code>3 &gt; 2</code>的算運結果：</p>
+<p>打開 node.js 來試試：</p>
+<pre><code>&gt; 3 &gt; 2
+true
+</code></pre><p>由於<code>3 &gt; 2</code>是正確的，所以我們不意外地得到 <code>true</code>，接下來最需要注意的地方在 javascript 會比較 <code>true</code> 及 <code>1</code>，那麼<code>ture &gt; 1</code>會是什麼結果呢？</p>
+<pre><code>&gt; true &gt; 1
+false
+</code></pre><p>實測結果發現是 <code>false</code>。這是由於執行 <code>&gt;</code>運算時，兩個運算子<code>true</code>、<code>1</code>都會被強制轉型成 boolean，因為在 javascript 當中，只有 0 轉成 boolean 會是 <code>false</code>，其它數字強制轉型後都會是 <code>true</code>，所以原本的 <code>true &gt; 1</code>可以視為 <code>true &gt; true</code>。兩個<code>true</code>應該要相等，不可能其中一個 <code>true</code> 大於另一個 <code>true</code>，所以<code>true &gt; 1</code>自然會回傳 <code>fasle</code>，這就是為什麼<code>console.log( 3 &gt; 2 &gt; 1 );</code>最後會得到 <code>false</code>。</p>
+<p>最後做個總整理：</p>
+<p><code>3 &gt; 2 &gt; 1</code> 相當於 <code>true &gt; 1</code> 相當於 <code>true &gt; true</code> 相當於 <code>false</code>。</p>
 
     </div>
-  </div>
-  
-  
-  
 
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/javascript/" rel="tag"># javascript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/02/06/javascript-Setting-default-values-for-parameters-of-a-function/" rel="prev" title="[javascript] Setting default values for parameters of a function">
+      <i class="fa fa-chevron-left"></i> [javascript] Setting default values for parameters of a function
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/02/17/javascript-Closure/" rel="next" title="[javascript] Closure">
+      [javascript] Closure <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 

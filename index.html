@@ -221,6 +221,76 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2022/09/03/如何為-Git-託管平台設定專屬的-ssh-key？/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lyenliang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Brian's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/03/如何為-Git-託管平台設定專屬的-ssh-key？/" class="post-title-link" itemprop="url">如何為 Git 託管平台設定專屬的 ssh key？</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">發表於</span>
+
+              <time title="創建時間：2022-09-03 14:02:30" itemprop="dateCreated datePublished" datetime="2022-09-03T14:02:30+08:00">2022-09-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新於</span>
+                <time title="修改時間：2023-03-13 10:57:33" itemprop="dateModified" datetime="2023-03-13T10:57:33+08:00">2023-03-13</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>市面上熱門的 Git 託管平台有很多種，像是 <code>gitlab.com</code>, <code>github.com</code>, <code>bitbucket.org</code> … 等等。</p>
+<p>平常透過 ssh 來 clone 時，預設都是用 ~/.ssh/id_rsa 這把 key 來下載資料。</p>
+<p>假如我們想要在不同的 Git 託管平台用不同 key 下載的話，可以透過修改 ~/.ssh/config 來達成，例如這樣設定：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">bash</span><br><span class="line">Host mygithub</span><br><span class="line">    HostName github.com</span><br><span class="line">    User my_github_account</span><br><span class="line">    IdentityFile ~/.ssh/my_github_public_key.pem</span><br><span class="line"></span><br><span class="line">Host mygitlab</span><br><span class="line">    HostName gitlab.com</span><br><span class="line">    User my_gitlab_account</span><br><span class="line">    IdentityFile ~/.ssh/my_gitlab_public_key.pem</span><br></pre></td></tr></table></figure>
+<p>上面這個範圍代表我們要用 <code>~/.ssh/my_github_public_key.pem</code> 這把 key 來上傳/下載 <code>github.com</code> 的資料，用 <code>~/.ssh/my_gitlab_public_key.pem</code> key 來上傳/下載的資料。</p>
+<p><code>~/.ssh/config</code> 還有其它選項可以用，完整的列表可以參考 <a href="[https://www.ssh.com/academy/ssh/config](https://www.ssh.com/academy/ssh/config">SSH config file for OpenSSH client</a>) 。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
     <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2022/05/06/Pytest-Fixture-介紹/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -473,7 +543,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新於</span>
-                <time title="修改時間：2022-06-17 10:30:04" itemprop="dateModified" datetime="2022-06-17T10:30:04+08:00">2022-06-17</time>
+                <time title="修改時間：2023-04-19 10:48:38" itemprop="dateModified" datetime="2023-04-19T10:48:38+08:00">2023-04-19</time>
               </span>
 
           
@@ -498,7 +568,7 @@
 <p><img src="/images/pasted-3.png" alt="upload successful"></p>
 <p>然後用 <code>pip install --requirement requirements.txt</code> 安裝 Libraries。裝好後你會發現資料夾裡多了好多不是自己寫的檔案:</p>
 <p><img src="/images/pasted-5.png" alt="upload successful"></p>
-<p>由於這些 libraries 跟你寫的 code 在同一個資料夾層級，它們會阻礙你閱讀 code，而且它們超過 3MB，無法在 AWS Lambda 線上編輯器顯示。</p>
+<p>由於這些 libraries 跟你寫的 code 在同一個資料夾層級，它們會阻礙你閱讀 code，而且當它們超過 3MB 時，無法在 AWS Lambda 線上編輯器顯示。</p>
 <h5 id="使用-Layer-後"><a href="#使用-Layer-後" class="headerlink" title="使用 Layer 後"></a>使用 Layer 後</h5><p>當你打算採用 layer 時，你需要將 Libraries 打包到名為 <code>python</code> 的資料夾內</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pip install \</span><br><span class="line">  --requirement requirements.txt \</span><br><span class="line">  --target python</span><br></pre></td></tr></table></figure>
 <p>然後用 <code>zip -r lambdaLayer.zip python</code> 將它打包再上傳。</p>
@@ -515,7 +585,7 @@
 <p><img src="/images/pasted-12.png" alt="upload successful"></p>
 <p>再來選 <code>Provide a layer version ARN</code>，並貼上剛剛記下的 ARN</p>
 <p><img src="/images/pasted-13.png" alt="upload successful"></p>
-<p>這時 Layer 只快建立完成，最後只要按下 <code>Save</code> 就能儲存 Layer，注意這時 <code>Layers</code> 右邊的數字變成 1，表示有一個 Layer。</p>
+<p>這時 Layer 就快建立完成了，最後只要按下 <code>Save</code> 就能儲存 Layer，注意這時 <code>Layers</code> 右邊的數字變成 1，表示有一個 Layer。</p>
 <p><img src="/images/pasted-14.png" alt="upload successful"></p>
 <h4 id="結果比較"><a href="#結果比較" class="headerlink" title="結果比較"></a>結果比較</h4><p>從上面的例子可以發現使用 Layer 後，編輯器裡只會留下你自己編寫的檔案</p>
 <p><img src="/images/pasted-17.png" alt="uploaded!"></p>
@@ -836,228 +906,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
-    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="lyenliang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Brian's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/12/17/node-js-Limiting-the-number-of-parallel-promises/" class="post-title-link" itemprop="url">[node.js] Limiting the number of parallel promises</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">發表於</span>
-
-              <time title="創建時間：2017-12-17 19:56:00" itemprop="dateCreated datePublished" datetime="2017-12-17T19:56:00+08:00">2017-12-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新於</span>
-                <time title="修改時間：2022-06-17 10:30:04" itemprop="dateModified" datetime="2022-06-17T10:30:04+08:00">2022-06-17</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><a href="http://bluebirdjs.com/docs/api/promise.all.html" target="_blank" rel="noopener">Promise.all</a> is a useful funciton when you want to wait for more than 1 promise running in parallel to complete. However, sometimes you may want to limit the number of parallel promises. For example, you may wish to limit the number of simultaneous downloads from a website.</p>
-<p><a href="https://github.com/charto/cwait" target="_blank" rel="noopener">cwait</a> is a convenient tool which allows you to limit the number of promises running in parallel. </p>
-<p>Here I’ll demonstrate how to use <code>cwait</code>. First let’s assume we have a function <code>later</code> that returns a promise which is resolved after a specified timeout. </p>
-<pre><code>function later (time, val) {
-  console.log(`later is triggered. ${val}`)
-  return new Promise((resolve, reject) =&gt; {
-    setTimeout(resolve, time, val)
-  })
-}
-</code></pre><p>When we create 10 promises with <code>later</code>, and execute them with <code>Promise.all</code>, it will take about 1 second to finish the execution.</p>
-<pre><code>// echoNumberPromiseAll.js
-
-const Promise = require(&apos;bluebird&apos;)
-
-let totalNumber = 10
-let timeout = 1000 // 1000 ms
-let start, finish
-
-function later (time, val) {
-  console.log(`later triggered. ${val}`)
-  return new Promise((resolve, reject) =&gt; {
-    setTimeout(resolve, time, val)
-  })
-}
-
-let promises = []
-function init () {
-  start = new Date()
-  for (let i = 0; i &lt; totalNumber; i += 1) {
-    promises.push(later(timeout, i))
-  }
-}
-
-init()
-
-Promise.all(promises)
-  .then((result) =&gt; {
-    console.log(`All done. result: ${result}`)
-    finish = new Date()
-    console.log(`Execution time: ${finish - start} ms`)
-  })
-  .catch(err =&gt; {
-    console.error(`error: ${err}`)
-  })
-</code></pre><p><code>node echoNumberPromiseAll.js</code>‘s execution result:</p>
-<pre><code>node echoNumberPromiseAll.js
-later triggered. 0
-later triggered. 1
-later triggered. 2
-later triggered. 3
-later triggered. 4
-later triggered. 5
-later triggered. 6
-later triggered. 7
-later triggered. 8
-later triggered. 9
-All done. result: 0,1,2,3,4,5,6,7,8,9
-Execution time: 1012 ms
-</code></pre><p>As you can see from the above output, 10 promises are triggered simultaneously. Because the execution time is about 1 second.</p>
-<p>Before we can apply <code>cwait</code>, we have to convert <code>Promise.all</code> to <a href="http://bluebirdjs.com/docs/api/promise.map.html" target="_blank" rel="noopener"><code>Promise.map</code></a> first. </p>
-<p>Here’s the converted code:</p>
-<pre><code>// echoNumberPromiseMap.js
-
-const Promise = require(&apos;bluebird&apos;)
-
-let totalNumber = 10
-let timeout = 1000 // 1000 ms
-let start, finish
-
-let numbers = []
-
-function later (time, val) {
-  console.log(`later triggered. ${val}`)
-  return new Promise((resolve, reject) =&gt; {
-    setTimeout(resolve, time, val)
-  })
-}
-
-function init () {
-  start = new Date()
-  for (let i = 0; i &lt; totalNumber; i += 1) {
-    numbers.push(i)
-  }
-}
-
-function promiseMap (number) {
-  return later(timeout, number)
-}
-
-init()
-
-Promise.map(numbers, promiseMap)
-  .then((result) =&gt; {
-    console.log(`All done. result: ${result}`)
-    finish = new Date()
-    console.log(`Execution time: ${finish - start} ms`)
-  })
-  .catch(err =&gt; {
-    console.error(`error: ${err}`)
-  })
-</code></pre><p>Then we will be able to apply <code>cwait</code> to the above code:</p>
-<pre><code>// echoNumberCwait.js
-
-const TaskQueue = require(&apos;cwait&apos;).TaskQueue
-const Promise = require(&apos;bluebird&apos;)
-
-let queue = new TaskQueue(Promise, 3)
-
-let totalNumber = 10
-let timeout = 1000 // 1000 ms
-let start, finish
-
-let numbers = []
-
-function later (time, val) {
-  console.log(`later triggered. ${val}`)
-  return new Promise((resolve, reject) =&gt; {
-    setTimeout(resolve, time, val)
-  })
-}
-
-function init () {
-  start = new Date()
-  for (let i = 0; i &lt; totalNumber; i += 1) {
-    numbers.push(i)
-  }
-}
-
-function promiseMap (number) {
-  return later(timeout, number)
-}
-
-init()
-
-Promise.map(numbers, queue.wrap(promiseMap))
-  .then((result) =&gt; {
-    console.log(`All done. result: ${result}`)
-    finish = new Date()
-    console.log(`Execution time: ${finish - start}`)
-  })
-  .catch(err =&gt; {
-    console.error(`error: ${err}`)
-  })
-</code></pre><p>In the example above, we limit the number of parallel promises to 3. Here’s the execution result of <code>node echoNumberCwait.js</code></p>
-<pre><code>later triggered. 0
-later triggered. 1
-later triggered. 2
-later triggered. 3
-later triggered. 9
-later triggered. 8
-later triggered. 7
-later triggered. 6
-later triggered. 5
-later triggered. 4
-All done. result: 0,1,2,3,4,5,6,7,8,9
-Execution time: 4016 ms
-</code></pre><p>The program first executes the promises with <code>val</code> equal to 0, 1, and 2. And waits until the 3 promises are completed. Then it executes the promises with <code>val</code> equal to 3, 9, and 8. and wait for them to complete …</p>
-<p>So in the end, it takes about 4 seconds to finish the execution. </p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1127,7 +975,7 @@ Execution time: 4016 ms
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-count">25</span>
           <span class="site-state-item-name">文章</span>
         </a>
       </div>
