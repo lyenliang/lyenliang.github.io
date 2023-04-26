@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"lyenliang.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前陣子自己寫了個 Jenkins 套件 Display Console Output Plugin，會開發這東西主要是因為希望 console output 可以直接顯示在 project 頁面上，這樣可以比較快看到 build 結果。 像這樣： 無奈使終找不到有這種功能的 plugin，stackoverflow 有人提到其它方式讓你比較快可以看到 console output，不過還是覺得不太">
+<meta name="keywords" content="jenkins">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jenkins Plugin 從無到有">
+<meta property="og:url" content="https://lyenliang.github.io/2017/04/30/Jenkins-Plugin-從無到有/index.html">
+<meta property="og:site_name" content="Brian&#39;s Blog">
+<meta property="og:description" content="前陣子自己寫了個 Jenkins 套件 Display Console Output Plugin，會開發這東西主要是因為希望 console output 可以直接顯示在 project 頁面上，這樣可以比較快看到 build 結果。 像這樣： 無奈使終找不到有這種功能的 plugin，stackoverflow 有人提到其它方式讓你比較快可以看到 console output，不過還是覺得不太">
+<meta property="og:locale" content="zh-TW">
+<meta property="og:image" content="https://lyenliang.github.io/images/jenkins/display_console_output.png">
+<meta property="og:image" content="https://lyenliang.github.io/images/jenkins/search_console.png">
+<meta property="og:image" content="https://lyenliang.github.io/images/jenkins/console_tail.png">
+<meta property="og:updated_time" content="2022-06-17T02:30:04.029Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Jenkins Plugin 從無到有">
+<meta name="twitter:description" content="前陣子自己寫了個 Jenkins 套件 Display Console Output Plugin，會開發這東西主要是因為希望 console output 可以直接顯示在 project 頁面上，這樣可以比較快看到 build 結果。 像這樣： 無奈使終找不到有這種功能的 plugin，stackoverflow 有人提到其它方式讓你比較快可以看到 console output，不過還是覺得不太">
+<meta name="twitter:image" content="https://lyenliang.github.io/images/jenkins/display_console_output.png">
+
+<link rel="canonical" href="https://lyenliang.github.io/2017/04/30/Jenkins-Plugin-從無到有/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-TW'
+  };
+</script>
+
+  <title>Jenkins Plugin 從無到有 | Brian's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Brian's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://lyenliang.github.io/2017/04/30/Jenkins-Plugin-從無到有/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lyenliang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Brian's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Jenkins Plugin 從無到有
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">發表於</span>
+
+              <time title="創建時間：2017-04-30 14:01:00" itemprop="dateCreated datePublished" datetime="2017-04-30T14:01:00+08:00">2017-04-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新於</span>
+                <time title="修改時間：2022-06-17 10:30:04" itemprop="dateModified" datetime="2022-06-17T10:30:04+08:00">2022-06-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前陣子自己寫了個 <a href="https://jenkins.io/" target="_blank" rel="noopener">Jenkins</a> 套件 <a href="https://wiki.jenkins-ci.org/display/JENKINS/Display+Console+Output+Plugin" target="_blank" rel="noopener">Display Console Output Plugin</a>，會開發這東西主要是因為希望 console output 可以直接顯示在 project 頁面上，這樣可以比較快看到 build 結果。</p>
+<p>像這樣：<br><img src="/images/jenkins/display_console_output.png" alt="stack heap" style="width: 730px; "></p>
+<p>無奈使終找不到有這種功能的 plugin，<a href="http://stackoverflow.com/questions/9496888/jenkins-display-last-console-output-on-project-page/43169372" target="_blank" rel="noopener">stackoverflow</a> 有人提到其它方式讓你比較快可以看到 console output，不過還是覺得不太方便。</p>
+<p>於是我就想到自己動手開發 plugin：</p>
+<p>先是安裝 <a href="https://wiki.jenkins-ci.org/display/JENKINS/Plugin+tutorial" target="_blank" rel="noopener">plugin tutorial</a> 提到的工具，然後再建個 hello world plugin。</p>
+<p>等到對 plugin 長什麼樣比較有概念後，再來想到的問題是怎麼在 project 頁面加視窗。我想說 Jenkins Plugin 已經有一千多個，總該可以找到現成的範例才對，於是便到 Plugin Manager 搜尋 <code>console</code> 關鍵字，看看有沒有 plugin 會把資訊顯示在 project 頁面。</p>
+<p><img src="/images/jenkins/search_console.png" alt="stack heap" style="width: 730px; "></p>
+<p>最後發現 <code>Console Tail Plugin</code> 跟我想要實現的功能非常接近。</p>
+<p><img src="/images/jenkins/console_tail.png" alt="stack heap" style="width: 730px; "></p>
+<p>打開 <a href="https://github.com/jenkinsci/console-tail-plugin" target="_blank" rel="noopener">source code</a> 發現它顯示資訊的頁面叫 <code>floatingBox.jelly</code>，根據這個線索我又 google 到 <a href="http://javadoc.jenkins-ci.org/hudson/model/Action.html" target="_blank" rel="noopener">Action</a>，Action 的頁面提到 <code>If an action has a view named floatingBox.jelly, it will be displayed as a floating box on the top page of the target ModelObject.</code>，於是就確定 Action + floatingBox 可以在某個頁面上顯示浮動視窗。</p>
+<p><code>Console Tail Plugin</code> 只有在 build 失敗時會顯示資訊，照理說我只要做些修改就可以變成我想要的功能。於是我便動手改改看，之後看到 <a href="https://github.com/jenkinsci/console-tail-plugin/blob/master/src/main/java/jenkins/plugins/consoletail/ConsoleTailProjectAction.java" target="_blank" rel="noopener">ConsoleTailProjectAction.java</a> 裡唯一跟 build 結果有關的只有這段</p>
+<pre><code>return Result.UNSTABLE.isBetterOrEqualTo(build.getResult()) ? build : null;
+</code></pre><p>這段意思看起來是如果 <code>UNSTABLE</code> 這個 build 結果比最近一次 build 結果要好的話，就回傳 build ，否則回傳 <code>null</code>，於是我把這行改成 <code>return build;</code> 試試看，結果真的順利顯示最後一次 build 結果到 project 頁面上。</p>
+<p>到這邊我發現我已做出當初想要的功能，不過我也知道 code 還有很多地方還沒深入了解，感覺這是個會有很多 bug 的產品，而且 console tail plugin 有些程式碼是我不需要的，這個 plugin 也無法即時顯示正在進行的 build，看來還需要改。</p>
+<p>在 Jenkins 的 <a href="https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/hudson/model/Run/console.jelly#L52-#L68" target="_blank" rel="noopener">source code</a> 裡有找到即時顯示 console output 的方式，看來這段 code 也可以參考。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/jenkins/" rel="tag"># jenkins</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/03/25/java-stack-and-heap/" rel="prev" title="[java] Memory 管理">
+      <i class="fa fa-chevron-left"></i> [java] Memory 管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/05/01/Installing-nginx-from-source-on-Ubuntu-14-04/" rel="next" title="Installing nginx from source on Ubuntu 14.04">
+      Installing nginx from source on Ubuntu 14.04 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">lyenliang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">標籤</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lyenliang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 強力驅動
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
